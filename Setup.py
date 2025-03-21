@@ -16,11 +16,14 @@ def create_virtualenv():
 
 def install_dependencies():
     """Installs dependencies from requirements.txt."""
-    pip_executable = os.path.join(ENV_NAME, "bin", "pip") if os.name != "nt" else os.path.join(ENV_NAME, "Scripts",
-                                                                                               "pip")
+    python_executable = os.path.join(ENV_NAME, "bin", "python") if os.name != "nt" else os.path.join(ENV_NAME,
+                                                                                                     "Scripts",
+                                                                                                     "python.exe")
+    print("Upgrading pip...")
+    subprocess.run([python_executable, "-m", "pip", "install", "--upgrade", "pip"], check=True)
+
     print("Installing dependencies from requirements.txt...")
-    subprocess.run([pip_executable, "install", "--upgrade", "pip"], check=True)
-    subprocess.run([pip_executable, "install", "-r", "requirements.txt"], check=True)
+    subprocess.run([python_executable, "-m", "pip", "install", "-r", "requirements.txt"], check=True)
 
 
 def main():
