@@ -1,10 +1,10 @@
-import torch
 import matplotlib.pyplot as plt
+import torch
 
 
 # Provided TankSystem class
 class TankSystem(torch.nn.Module):
-    def __init__(self, xbar: torch.Tensor, x_init=None, a: float = 0.6):
+    def __init__(self, x_init=None, a: float = 0.6):
         super().__init__()
         self.x_init = torch.tensor(1.1) if x_init is None else x_init.reshape(1, -1)
         self.state_dim = 1
@@ -41,12 +41,11 @@ class TankSystem(torch.nn.Module):
 
 
 # Set parameters
-xbar = torch.tensor([1.0])  # Dummy value, not used in dynamics but required by __init__
-tank_system = TankSystem(xbar=xbar)
+tank_system = TankSystem()
 horizon = 200
 num_train = 400
 num_val = 200
-std_noise = 0.002
+std_noise = 0.003
 
 
 # Function to generate piecewise constant inputs
@@ -109,29 +108,50 @@ plt.show()
 
 print("Trajectories generated and saved as 'train_trajectories.pt' and 'val_trajectories.pt'")
 
+horizon_plot = 800
+time = torch.arange(horizon_plot)
+
+# Generate sinusoidal input for one trajectory
+u_sin = generate_sinusoidal_inputs(1, horizon_plot, )
 
 # Generate constant input for one trajectory
-u_constant = torch.ones((1, horizon, 1)) * 2.0  # Constant input of 2.0
+u_constant = torch.ones((1, horizon_plot, 1)) * 2.0  # Constant input of 2.0
 
 # Generate noise for this trajectory
-w_constant = torch.normal(0, std_noise, size=(1, horizon, 1))
+w_constant = torch.normal(0, std_noise, size=(1, horizon_plot, 1))
 
-# Simulate the trajectory
+# Simulate the trajectories
 x_constant = tank_system.simulate(u_constant, w_constant)
+x_sin = tank_system.simulate(u_sin, w_constant)
+
+# Create a single figure with two subplots
+fig, axes = plt.subplots(1, 2, figsize=(12, 4))  # 1 row, 2 columns
 
 # Plot the constant input trajectory
-plt.figure(figsize=(6, 4))
-time = torch.arange(horizon)
-plt.plot(time, x_constant[0, :, 0], label='State $x$ (constant u=2.0)')
-plt.plot(time, u_constant[0, :, 0], label='Input $u$', linestyle='--')
-plt.title('Trajectory with Constant Input')
-plt.xlabel('Time step k')
-plt.ylabel('Value')
-plt.legend()
-plt.grid(True)
+axes[0].plot(time, x_constant[0, :, 0], label='State $x$ (constant u=2.0)')
+axes[0].plot(time, u_constant[0, :, 0], label='Input $u$', linestyle='--')
+axes[0].set_title('Trajectory with Constant Input')
+axes[0].set_xlabel('Time step k')
+axes[0].set_ylabel('Value')
+axes[0].legend()
+axes[0].grid(True)
+
+# Plot the sinusoidal input trajectory
+axes[1].plot(time, x_sin[0, :, 0], label='State $x$ (sinusoidal u)')
+axes[1].plot(time, u_sin[0, :, 0], label='Input $u$', linestyle='--')
+axes[1].set_title('Trajectory with Sinusoidal Input')
+axes[1].set_xlabel('Time step k')
+axes[1].set_ylabel('Value')
+axes[1].legend()
+axes[1].grid(True)
+
+# Adjust layout
+plt.tight_layout()
+
+# Save the figure as a PDF
+plt.savefig("trajectories.pdf", format="pdf", bbox_inches="tight")
+
+# Show the plot
 plt.show()
-
-
-
 
 Ts

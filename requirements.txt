@@ -2,5 +2,6 @@ torch~=2.2.2
 matplotlib~=3.9.0
 tqdm~=4.67.1
 jax~=0.4.35
+numpy<2
 
 

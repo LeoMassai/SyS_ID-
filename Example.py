@@ -34,7 +34,7 @@ SSM set up ------------------------------------------
 """
 # Define model configuration (SSM)
 cfg = Namespace(
-    n_u=1, n_y=1, d_model=6, d_state=20, n_layers=3,
+    n_u=1, n_y=1, d_model=6, d_state=20, n_layers=1,
     ff="MLP", max_phase=math.pi/50, r_min=0.7, r_max=0.98
 )
 
@@ -44,15 +44,15 @@ config = DWNConfig(
     ff=cfg.ff, rmin=cfg.r_min, rmax=cfg.r_max, max_phase=cfg.max_phase
 )
 
-model = DeepSSM(cfg.n_u, cfg.n_y, config).to(device)
+#model = DeepSSM(cfg.n_u, cfg.n_y, config).to(device)
 
 """
 REN set up ------------------------------------------
 """
 
-#model = ContractiveREN(1, 1, 12, 12)
+model = ContractiveREN(1, 1, 12, 12)
 
-#model = SimpleRNN(1, 1, 10, 12)
+#model = SimpleRNN(1, 1, 10, 8)
 
 # Configure optimizer
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -136,6 +136,8 @@ def plot_trajectories(y_true, y_pred, u, indices, title_prefix, num_plots=4):
         ax.grid(True)
 
     plt.tight_layout()
+    # Save the figure as a PDF
+    plt.savefig("fit.pdf", format="pdf", bbox_inches="tight")
     plt.show()
 
 
@@ -144,8 +146,8 @@ _, y_train_pred = validate(model, u_train[:, :, :], y_train[:, :, :])
 _, y_val_pred = validate(model, u_val[:, :, :], y_val[:, :, :])
 
 # Define indices for plotting
-train_indices = [0, 1, 50, 51]  # Example: two piecewise, two sinusoidal
-val_indices = [0, 1, 50, 51]  # Example: two piecewise, two sinusoidal
+train_indices = [0, 1, 205, 205]  # Example: two piecewise, two sinusoidal
+val_indices = [0, 1, 105, 105]  # Example: two piecewise, two sinusoidal
 
 # Plot training trajectories
 plot_trajectories(y_train, y_train_pred, u_train, train_indices, "Training")
