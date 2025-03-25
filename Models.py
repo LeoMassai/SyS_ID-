@@ -15,7 +15,7 @@ class DWNConfig:
     d_state: int = 64  # state size of the LRU (n)
     n_layers: int = 6  # number of SSMs blocks in cascade for deep structures
     dropout: float = 0.0  # set it different from 0 if you want to introduce dropout regularization
-    bias: bool = True  # bias of MLP layers
+    bias: bool = False  # bias of MLP layers
     rmin: float = 0.0  # min. magnitude of the eigenvalues at initialization in the complex parametrization
     rmax: float = 1.0  # max. magnitude of the eigenvalues at initialization in the complex parametrization
     max_phase: float = 2 * math.pi  # maximum phase of the eigenvalues at initialization in the complex parametrization
@@ -169,7 +169,7 @@ class LRU(nn.Module):
 
 # Static non-linearities ------------------------------------
 
-class MLP(nn.Module):
+class MLPC(nn.Module):
     """ Standard Transformer MLP """
 
     def __init__(self, config: DWNConfig):
@@ -187,6 +187,48 @@ class MLP(nn.Module):
         return x
 
 
+class MLP(nn.Module):
+    def __init__(self, input_dim, hidden_dims, output_dim, activation=nn.ReLU, dropout=0.0):
+        """
+        Initialize an MLP.
+
+        Parameters:
+        - input_dim (int): Number of input features.
+        - hidden_dims (list of int): List containing the number of neurons for each hidden layer.
+        - output_dim (int): Number of output features.
+        - activation (torch.nn.Module): Activation function class to be used (default: nn.ReLU).
+        - dropout (float): Dropout probability (default: 0.0, meaning no dropout).
+        """
+        super(MLP, self).__init__()
+        layers = []
+        last_dim = input_dim
+        # Add hidden layers
+        for hidden_dim in hidden_dims:
+            layers.append(nn.Linear(last_dim, hidden_dim))
+            layers.append(activation())
+            if dropout > 0.0:
+                layers.append(nn.Dropout(dropout))
+            last_dim = hidden_dim
+
+        # Add output layer
+        layers.append(nn.Linear(last_dim, output_dim))
+
+        # Combine all layers into a Sequential module
+        self.network = nn.Sequential(*layers)
+
+    def forward(self, x):
+        """
+        Forward pass of the network.
+
+        Parameters:
+        - x (torch.Tensor): Input tensor.
+
+        Returns:
+        - torch.Tensor: Output of the MLP.
+        """
+        return self.network(x)
+
+
 # SSM model -----------------------------------------------------
 
 class SSMLayer(nn.Module):
@@ -199,13 +241,13 @@ class SSMLayer(nn.Module):
         self.lru = LRU(config.d_model, config.d_model, config.d_state,
                        rmin=config.rmin, rmax=config.rmax, max_phase=config.max_phase)
 
-        self.ff = MLP(config)
+        self.ff = MLPC(config)
 
         self.dropout = nn.Dropout(config.dropout)
 
     def forward(self, x, state=None, mode: str = "scan"):
         z = x
-        #  z = self.ln(z)  # prenorm
+        z = self.ln(z)  # prenorm
 
         z = self.lru(z, state=state, mode=mode)
 

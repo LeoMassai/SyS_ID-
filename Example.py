@@ -34,8 +34,8 @@ SSM set up ------------------------------------------
 """
 # Define model configuration (SSM)
 cfg = Namespace(
-    n_u=1, n_y=1, d_model=6, d_state=20, n_layers=1,
-    ff="MLP", max_phase=math.pi/50, r_min=0.7, r_max=0.98
+    n_u=1, n_y=1, d_model=11, d_state=20, n_layers=3,
+    ff="MLP", max_phase=math.pi / 50, r_min=0.7, r_max=0.98
 )
 
 # Initialize model (SSM)
@@ -44,15 +44,15 @@ config = DWNConfig(
     ff=cfg.ff, rmin=cfg.r_min, rmax=cfg.r_max, max_phase=cfg.max_phase
 )
 
-#model = DeepSSM(cfg.n_u, cfg.n_y, config).to(device)
+model = DeepSSM(cfg.n_u, cfg.n_y, config).to(device)
 
 """
 REN set up ------------------------------------------
 """
 
-model = ContractiveREN(1, 1, 12, 12)
+#model = ContractiveREN(1, 1, 8, 8)
 
-#model = SimpleRNN(1, 1, 10, 8)
+model = SimpleRNN(1, 1, 10, 8)
 
 # Configure optimizer
 optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
